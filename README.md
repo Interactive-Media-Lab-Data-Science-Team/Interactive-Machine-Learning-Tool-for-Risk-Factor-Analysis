@@ -18,6 +18,7 @@ For Medical Data Analysis
 * [Behavioral Risk Factor Surveillance System (BRFSS 2018)](https://www.cdc.gov/brfss/annual_data/annual_2018.html)
     + [Data Overview](https://www.cdc.gov/brfss/annual_data/2018/pdf/overview-2018-508.pdf)
     + [Data Cookbook](https://www.cdc.gov/brfss/annual_data/2018/pdf/codebook18_llcp-v2-508.pdf)
+    + [Cleaned_BRFSS.csv](https://drive.google.com/file/d/1tNWPT9xW1jc3Qta_h4CGHp9lRbHM1540/view?usp=sharing)
 
 ## Installation
 

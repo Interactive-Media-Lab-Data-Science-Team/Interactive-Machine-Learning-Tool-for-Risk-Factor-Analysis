@@ -16,16 +16,12 @@ def create_app():
         from .assets import compile_static_assets
 
         # Import Dash application
-        from .plotlydash.dashboard import create_dashboard
-        from .plotlydash.testLoad import test1
-        from .plotlydash.page2 import create_page2
-        from .plotlydash.page3 import create_page3
-        from .plotlydash.page4 import create_page4
-        test1(app)
-        create_dashboard(app)
-        create_page2(app)
-        create_page3(app)
-        create_page4(app)
+        from .plotlydash.dataDownload import dataDownload
+        # from .plotlydash.testLoad import test1
+        # from .plotlydash.page2 import create_page2
+        # from .plotlydash.page3 import create_page3
+        # from .plotlydash.page4 import create_page4
+        dataDownload(app)
 
         # Compile static assets
         compile_static_assets(assets)
