@@ -1,0 +1,17 @@
+{% extends "layout.jinja2" %}
+
+{% block content %}
+<style type="text/css">
+</style>
+<div class="card">
+  <img src="{{ url_for('static', filename='img/logo.png') }}" class="logo" />
+  <h1 class="site-title">{{ title }}</h1>
+  <p class="subtitle">{{subtitle}}</p>
+  <p>Institute: <a href="https://imedia.mie.utoronto.ca/">Interactive Media Lab</a></p>
+  <p>The sources is <a href="https://github.com/toddbirchard/plotlydash-flask-tutorial">DaPraxis Area</a></p>
+  <a href="/dashapp/" class="dash-link">
+    <span>Start Preprocess</span>
+    <i class="fas fa-arrow-right"></i>
+  </a>
+</div>
+{% endblock %}
