@@ -5,11 +5,13 @@ import dash
 import dash_table
 import dash_html_components as html
 import dash_core_components as dcc
+import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 from .layouts.layout import html_layout
 import plotly.express as px
 import missingno as msno
 import matplotlib.pyplot as plt
+from dash.dependencies import Input, Output
 
 global_df = pd.read_csv("data/311-calls.csv")
 
@@ -27,6 +29,13 @@ def categorize_feature(df):
     result = [integers, categorical, floaters]
     return result
 
+def delete_threshold(df, value):
+    delete_column_list = []
+    for feature in df.columns.tolist():
+        if df[feature].isnull().sum() / len([feature]) > int(value):
+            delete_column_list.append(feature)
+    return delete_column_list
+
 def missing_percentage(df, threshold):
     missing_p = []
     for feature in df.columns.tolist():
@@ -39,7 +48,9 @@ def create_EDA(server):
     dash_app = dash.Dash(name='EDA', server=server, url_base_pathname='/EDA/', external_stylesheets=[
                              '/static/dist/css/styles.css',
                              'https://fonts.googleapis.com/css?family=Lato',
+                             'dbc.themes.BOOTSTRAP',
                              'https://codepen.io/chriddyp/pen/bWLwgP.css'
+
                              ]
                     )
     dash_app.index_string = html_layout
@@ -49,7 +60,7 @@ def create_EDA(server):
 
     left_margin = 200
     right_margin = 100
-    dash_app.layout = html.Div(children =[
+    dash_app.layout = dbc.Container(children =[
         html.H2('Exploratory Data Analysis'),
         html.H1('Data explore, data visualization'),
         html.Br(),
@@ -73,13 +84,9 @@ def create_EDA(server):
         #create 2 tabs
         dcc.Tabs(id='tabs-main', value='tab-1', children=[
             dcc.Tab(label='Box plot', value='tab-1'),
-            dcc.Tab(label='Missing Visualization', value='tab-2'),
+            dcc.Tab(label='Missing Visualization', value='tab-MV'),
         ]),
-        html.Div(id='tabs-content'),
-
-
-
-
+        html.Div(id='tabs-content-main'),
 
 
 #--------------------------------------------------------------------------------------
@@ -95,7 +102,7 @@ def create_EDA(server):
                 html.Button('Submit', n_clicks=0, id='save-button'),
                 html.Div(id="save-div")
 
-            ], className='eight columns'),
+            ], className='six columns'),
 
             html.Div([
 
@@ -103,7 +110,7 @@ def create_EDA(server):
                 html.Div(id='dd-output-container'),
                 html.Div(id='tabs-content1')
 
-            ], className='four columns'),
+            ], className='six columns'),
         ], className='row')
 
 
@@ -111,9 +118,9 @@ def create_EDA(server):
     ], id='dash-container')
 
 #Render tab contents
-    @dash_app.callback(dash.dependencies.Output('tabs-content', 'children'),
+    @dash_app.callback(dash.dependencies.Output('tabs-content-main', 'children'),
                   [dash.dependencies.Input('tabs-main', 'value')])
-    def render_content(tab):
+    def render_content_main(tab):
         if tab == 'tab-1':
             return html.Br(),\
                    html.Div([
@@ -128,6 +135,15 @@ def create_EDA(server):
                     ],
                     value='features'
                 ),
+
+                # dbc.InputGroup(
+                #     [
+                #         dbc.InputGroupAddon("With textarea", addon_type="prepend"),
+                #         dbc.Textarea(),
+                #     ],
+                #     className="mb-3",
+                # ),
+
                 html.Div(id='dropdown_content'),
             ], className='four columns'),
 
@@ -135,11 +151,11 @@ def create_EDA(server):
                 # html.H3('Data Summary'),
                 html.Div(id='dd-notice'),
                 html.Div(id='dd-output-container'),
-                dcc.Graph(id='dd-figure'),
+                dcc.Graph(id='dd-figure',figure={ 'data': [], 'layout': []}),
             ], className='eight columns'),
         ], className='row')
 
-        elif tab == 'tab-2':
+        else:
             return html.Div([
 
                 #left block of the page
@@ -162,7 +178,7 @@ def create_EDA(server):
                 html.Div([
                     html.H3("test"),
                     html.Br(),
-                    html.Div(id='slider-output-container'),
+                    dcc.Graph(id='slider-output-container',figure={ 'data': [], 'layout': []}),
 
                 ],className='six columns')
 
@@ -171,10 +187,10 @@ def create_EDA(server):
     @dash_app.callback(
         dash.dependencies.Output('output-container-range-slider', 'children'),
         [dash.dependencies.Input('my-range-slider', 'value')])
-    def update_output(value):
+    def update_output_slider(value):
         return 'You have selected "{}" as your lower bound and {} as your upper bound'.format(value[0], value[1])
 
-    @dash_app.callback(dash.dependencies.Output('slider-output-container', 'children'),
+    @dash_app.callback(dash.dependencies.Output('slider-output-container', 'figure'),
                        [dash.dependencies.Input('submit-button-slider', 'n_clicks')],
                        [dash.dependencies.State('my-range-slider', 'value'),]
                        )
@@ -287,7 +303,14 @@ def create_EDA(server):
 
     def visualize_features(value):
         str_value = str(value)
-        fig = px.box(global_df[str_value], y=str_value)
+        features = categorize_feature(global_df)
+
+        if str_value in features[0]:
+            fig = px.box(global_df[str_value], y=str_value)
+        elif str_value in features[1]:
+            fig = px.histogram(global_df[str_value], y=str_value)
+        else:
+            fig = px.box(global_df[str_value], y=str_value)
         return fig
 
 
@@ -313,7 +336,7 @@ def create_EDA(server):
         if tab == 'tab-1':
             return html.Div([
                 html.Br(),
-                dcc.Dropdown(
+            dcc.Dropdown(
                     id='dropdown_category1',
                     options=[
                         {'label': 'Integer', 'value': 'int', },
@@ -322,6 +345,7 @@ def create_EDA(server):
                     ],
                     value='features'
                 ),
+
                 html.Div(id='dropdown_content1'),
                 html.Br(),
                 html.Div([
@@ -361,6 +385,10 @@ def create_EDA(server):
                          children='Select the feature that you would like to autofill')
 
             ])
+
+
+
+
 
     @dash_app.callback(
         dash.dependencies.Output('output-container-button-threshold', 'children'),
@@ -525,5 +553,8 @@ def create_EDA(server):
 
 
 
-
-
+#input-group, choose what type of input to type in (boot-strap)
+#categorical data change to show histogram
+#change the delete feature threshold to slide bars
+#the default for the dropdown should not be a empty graph (keep it empty)
+#move the autofill function to comply with the "feature selection"
