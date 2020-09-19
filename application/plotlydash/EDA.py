@@ -8,11 +8,13 @@ import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 from .layouts.layout import html_layout
-import plotly.express as px
+import plotly.graph_objects as go
 import missingno as msno
 import matplotlib.pyplot as plt
+from dash.exceptions import PreventUpdate
 
-global_df = pd.read_csv("data/311-calls.csv")
+
+FILE_PATH = 'data/311-calls.csv'
 
 def categorize_feature(df):
     integers = []
@@ -68,7 +70,7 @@ def create_EDA(server):
             # create 2 tabs
             dcc.Tabs(id='tabs-main', value='main', children=[
                 dcc.Tab(label='Box plot', value='tab-preparation'),
-                dcc.Tab(label='Missing Visualization', value='tab-missing'),
+                dcc.Tab(label='Missing Visualization', value='tab-missing')
             ]),
 
             #display for Tabs' content
@@ -78,6 +80,8 @@ def create_EDA(server):
     ], id='dash-container')
 
 #Render tab contents
+    # @dash_app.callback(dash.dependencies.Output(''))
+
     @dash_app.callback(dash.dependencies.Output('tabs-content', 'children'),
                   [dash.dependencies.Input('tabs-main', 'value')])
     def render_tab_main(tab):
@@ -134,7 +138,7 @@ def create_EDA(server):
                     ),
                     html.Div(id='output-container-range-slider'),
                     html.Br(),
-                    # html.Button('Submit', id='submit-button-slider', n_clicks=0)
+                    html.Button('Submit', id='submit-button-slider', n_clicks=0),
                     html.Div(children=[
                     dbc.Button("Submit", color="primary", className="six columns", id='submit-button-slider'),
                     dbc.Button("Delete", color="secondary", className="six columns",id="missing_delete_threshold" ),]),
@@ -144,18 +148,18 @@ def create_EDA(server):
 
                 # right block of the page
                 html.Div([
-                    # dcc.Graph(
-                    #     figure={"layout": {
-                    #         "xaxis": {"visible": False},
-                    #         "yaxis": {"visible": False},
-                    #         "annotations": [{
-                    #             "text": "Please Select the Range",
-                    #             "xref": "paper",
-                    #             "yref": "paper",
-                    #             "showarrow": False,
-                    #             "font": {"size": 28}
-                    #         }]
-                    #     }}, id='missing-figure'),
+                    dcc.Graph(
+                        figure={"layout": {
+                            "xaxis": {"visible": False},
+                            "yaxis": {"visible": False},
+                            "annotations": [{
+                                "text": "Please Select the Range",
+                                "xref": "paper",
+                                "yref": "paper",
+                                "showarrow": False,
+                                "font": {"size": 28}
+                            }]
+                        }}, id='missing-figure'),
 
                 ],className='six columns')
 
@@ -166,6 +170,7 @@ def create_EDA(server):
     @dash_app.callback(dash.dependencies.Output('dropdown_content', 'children'),
                        [dash.dependencies.Input('dropdown_category', 'value')])
     def render_tab_preparation_dropdown(value):
+        global_df = pd.read_csv(FILE_PATH)
         features = categorize_feature(global_df)
         if value == 'int':
             return html.Div([
@@ -244,6 +249,7 @@ def create_EDA(server):
         [dash.dependencies.Input('dropdown', 'value')])
 
     def preparation_tab_information_report(value):
+        global_df = pd.read_csv(FILE_PATH)
         str_value = str(value)
         R_dict = global_df[str_value].describe().to_dict()
         result = list()
@@ -258,6 +264,7 @@ def create_EDA(server):
         [dash.dependencies.Input('dropdown', 'value')])
 
     def preparation_tab_visualize_features(value):
+        global_df = pd.read_csv(FILE_PATH)
         str_value = str(value)
         features = categorize_feature(global_df)
 
@@ -271,11 +278,14 @@ def create_EDA(server):
 
 #______________________________________________________________
 
-    @dash_app.callback(
-        dash.dependencies.Output('output-container-range-slider', 'children'),
-        [dash.dependencies.Input('my-range-slider', 'value')])
-    def update_output(value):
-        return 'You have selected "{}" as your lower bound and {} as your upper bound'.format(value[0], value[1])
+    # @dash_app.callback(
+    #     # [dash.dependencies.Output('output-container-range-slider', 'children'),
+    #      dash.dependencies.Output('missing-figure', 'figure'),
+    #     [dash.dependencies.Input('my-range-slider', 'value')])
+    # def update_output(value):
+    #     global_df = pd.read_csv("download.csv")
+        
+        # return 'You have selected "{}" as your lower bound and {} as your upper bound'.format(value[0], value[1])
 
 
     #callback for the Missing Visualization
@@ -298,37 +308,55 @@ def create_EDA(server):
 
         This function graphs the nan density of the whole dataset, better to use a (top-buttom) <= 0.03 to see the features names clearly
         '''
-        if n_clicks > 0:
-            nans = pd.concat([global_df.isnull().sum(), (global_df.isnull().sum() / global_df.shape[0]) * 100], axis=1,
-                             keys=['Num_NaN', 'NaN_Percent'])
-            nans = nans[nans.Num_NaN > 0]
-            # print(nans.shape)
-            nans = nans.sort_values(by=['NaN_Percent'], ascending=False)
-            cols_with_nans = nans.index.tolist()
-            selected = []
-            for col in cols_with_nans:
-                if (nans.loc[col, 'NaN_Percent'] <= slider_value[1] * 100) and (
-                        nans.loc[col, 'NaN_Percent'] > slider_value[0] * 100):
-                    selected.append(col)
-            return msno.matrix(df=global_df[selected], figsize=(30, 15), color=(0.24, 0.77, 0.77))
-            # return (nans['NaN_Percent'][selected[0]], nans['NaN_Percent'][selected[-1]], nans, selected, cols_with_nans)
-
-            # upper, lower, nans, selected, cols_with_nans = display_nans(df, top=lower_bound, buttom=upper_bound)
-            # print(nans.loc[selected])
-            # # print(nans)
-            # print("with highest nan density at {}% and lowest at {}%".format(upper, lower))
+        if n_clicks != None:
+            if n_clicks > 0:
+                global_df = pd.read_csv(FILE_PATH)
+                nans = pd.concat([global_df.isnull().sum(), (global_df.isnull().sum() / global_df.shape[0]) * 100], axis=1,
+                                keys=['Num_NaN', 'NaN_Percent'])
+                nans = nans[nans.Num_NaN > 0]
+                nans = nans.sort_values(by=['NaN_Percent'], ascending=False)
+                selected = []
+                for col in nans.index.tolist():
+                    if (nans.loc[col, 'NaN_Percent'] <= slider_value[1]) and (
+                            nans.loc[col, 'NaN_Percent'] > slider_value[0]):
+                        selected.append(col)
+                if len(selected)==0:
+                    figure={"layout": {
+                            "xaxis": {"visible": False},
+                            "yaxis": {"visible": False},
+                            "annotations": [{
+                                "text": 'No such missing in range',
+                                "xref": "paper",
+                                "yref": "paper",
+                                "showarrow": False,
+                                "font": {"size": 28}
+                            }]
+                        }}
+                    return figure
+                return go.Figure(data=go.Heatmap(
+                    z=global_df[selected].isnull().replace({True:1, False:0}).values,
+                    x=selected
+                ))
+        else:
+            raise PreventUpdate
 
     @dash_app.callback(dash.dependencies.Output('outputbox_delete_threshold','children'),
                        [dash.dependencies.Input('missing_delete_threshold', 'n_clicks')],
                        [dash.dependencies.State('my-range-slider', 'value')])
     def delete_threshold(n_clicks, value):
-        delete_column_list = []
+        
+        # global_df = pd.read_csv("download.csv")
         if n_clicks is None:
             return "Click the Delete button if you would like to Delete all the features with in the missing range"
         else:
+            global_df = pd.read_csv(FILE_PATH)
+            delete_column_list = []
             for feature in global_df.columns.tolist():
-                if int(value[0]) < (global_df[feature].isnull().sum() / len([feature])) > int(value[1]):
+                if int(value[0]) < (global_df[feature].isnull().sum() / len([feature]))*100 > int(value[1]):
                     delete_column_list.append(feature)
+            if(len(delete_column_list)==0):
+                return "Nothing is deleted"
+            global_df.drop(delete_column_list, axis=1).to_csv(FILE_PATH)
             return "{} has been deleted " .format(delete_column_list)
 
 
@@ -371,7 +399,7 @@ def create_EDA(server):
         [dash.dependencies.State('dropdown', 'value'),
          dash.dependencies.State('input_float', 'value')],)
     def fill_float(n_clicks, feature, value):
-        print(feature)
+        global_df = pd.read_csv(FILE_PATH)
         if n_clicks is None:
             return "Action not made"
         else:
@@ -406,11 +434,10 @@ def create_EDA(server):
         [dash.dependencies.State('dropdown', 'value'),
          dash.dependencies.State('input_int', 'value')],)
     def fill_int(n_clicks, feature, value):
-        print(feature)
         if n_clicks is None:
             return "Action not made"
         else:
-            df1 = global_df
+            df1 = pd.read_csv(FILE_PATH)
             df1.fillna(value= {feature:value},inplace=True)
             print(df1[feature].isna().sum())
             print(df1[feature])
@@ -427,6 +454,7 @@ def create_EDA(server):
         if n_clicks is None:
             return "Click the Delete Feature button if you would like to Delete this Feature"
         else:
+            global_df = pd.read_csv(FILE_PATH)
             df3 = global_df.drop(value, axis=1)
             print(df3.head())
             return u'''The feature "{}" has been deleted

@@ -19,12 +19,12 @@ def create_app():
         from .plotlydash.dataDownload import dataDownload
         # from .plotlydash.testLoad import test1
         from .plotlydash.EDA import create_EDA
-        from .plotlydash.PCA import create_PCA
+        # from .plotlydash.PCA import create_PCA
         # from .plotlydash.page3 import create_page3
         # from .plotlydash.page4 import create_page4
         dataDownload(app)
         create_EDA(app)
-        create_PCA(app)
+        # create_PCA(app)
 
         # Compile static assets
         compile_static_assets(assets)

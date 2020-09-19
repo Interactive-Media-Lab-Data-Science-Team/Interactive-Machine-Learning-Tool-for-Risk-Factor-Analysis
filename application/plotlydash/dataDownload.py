@@ -74,6 +74,10 @@ def dataDownload(server):
     app.index_string = html_layout
 
     app.scripts.config.serve_locally = True  # Uploaded to npm, this can work online now too.
+    
+    df = pd.DataFrame([])
+    # df.to_csv(os.stat(r`str(os.getcwd())+'\\uploads\\'+str('download.csv')`))
+    df.to_csv(r'download.csv')
 
     app.layout = html.Div([
         dcc.Dropdown(
@@ -113,9 +117,7 @@ def dataDownload(server):
     def update_output(value):
         if value is not None:
             file_id = allData[value]
-            df = pd.DataFrame([])
-            df.to_csv(r'uploads\download.csv')
-            destination = 'uploads\download.csv'
+            destination = 'download.csv'
             download_file_from_google_drive(file_id, destination)
             return parse_contents('download.csv')
         
@@ -123,7 +125,7 @@ def dataDownload(server):
         try:
             if 'csv' in filename:
                 # Assume that the user uploaded a CSV file
-                df = pd.read_csv("uploads/%s" % (filename))
+                df = pd.read_csv("%s" % (filename))
             elif 'xls' in filename:
                 # Assume that the user uploaded an excel file
                 df = pd.read_excel(io.BytesIO(decoded))
@@ -133,7 +135,7 @@ def dataDownload(server):
                 'There was an error processing this file.'
             ])
         
-        size = convert_unit(os.stat(str(os.getcwd())+'/uploads/'+str(filename)).st_size, SIZE_UNIT.MB)
+        size = convert_unit(os.stat(str(os.getcwd())+'/'+str(filename)).st_size, SIZE_UNIT.MB)
 
         return html.Div([
             # html.H5("Upload File: {}".format(filename)),
