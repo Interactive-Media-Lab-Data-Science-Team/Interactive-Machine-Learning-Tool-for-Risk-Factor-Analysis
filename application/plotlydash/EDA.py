@@ -15,6 +15,7 @@ from dash.exceptions import PreventUpdate
 
 
 FILE_PATH = 'data/311-calls.csv'
+BACK_UP_PATH = 'data/original/311-calls-original.csv'
 
 def categorize_feature(df):
     integers = []
@@ -42,6 +43,9 @@ def create_EDA(server):
                              ]
                     )
     dash_app.index_string = html_layout
+
+    df = pd.read_csv(FILE_PATH)
+    df.to_csv(BACK_UP_PATH)
 
     left_margin = 200
     right_margin = 100
@@ -404,7 +408,7 @@ def create_EDA(server):
             return "Action not made"
         else:
             df1 = global_df
-            df1.fillna(value= {feature:value},inplace=True)
+            df1.fillna(value= {feature:value},inplace=True).to_csv(FILE_PATH)
             print(df1[feature].isna().sum())
             print(df1[feature])
             return u'''The feature "{}" has been auto_filled with {}
@@ -416,12 +420,13 @@ def create_EDA(server):
         [dash.dependencies.State('dropdown', 'value'),
          dash.dependencies.State('input_str', 'value')],)
     def fill_str(n_clicks, feature, value):
+        global_df = pd.read_csv(FILE_PATH)
         print(feature)
         if n_clicks is None:
             return "Action not made"
         else:
             df1 = global_df
-            df1.fillna(value= {feature:value},inplace=True)
+            df1.fillna(value= {feature:value},inplace=True).to_csv(FILE_PATH)
             print(df1[feature].isna().sum())
             print(df1[feature])
             return u'''The feature "{}" has been auto_filled with {}
@@ -438,7 +443,7 @@ def create_EDA(server):
             return "Action not made"
         else:
             df1 = pd.read_csv(FILE_PATH)
-            df1.fillna(value= {feature:value},inplace=True)
+            df1.fillna(value= {feature:value},inplace=True).to_csv(FILE_PATH)
             print(df1[feature].isna().sum())
             print(df1[feature])
             return u'''The feature "{}" has been auto_filled with {}
@@ -455,7 +460,7 @@ def create_EDA(server):
             return "Click the Delete Feature button if you would like to Delete this Feature"
         else:
             global_df = pd.read_csv(FILE_PATH)
-            df3 = global_df.drop(value, axis=1)
+            df3 = global_df.drop(value, axis=1).to_csv(FILE_PATH)
             print(df3.head())
             return u'''The feature "{}" has been deleted
                         '''.format(
