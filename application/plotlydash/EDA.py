@@ -174,7 +174,7 @@ def create_EDA(server):
     @dash_app.callback(dash.dependencies.Output('dropdown_content', 'children'),
                        [dash.dependencies.Input('dropdown_category', 'value')])
     def render_tab_preparation_dropdown(value):
-        global_df = pd.read_csv(FILE_PATH)
+        global_df = pd.read_csv(FILE_PATH,index_col=0)
         features = categorize_feature(global_df)
         if value == 'int':
             return html.Div([
@@ -187,15 +187,7 @@ def create_EDA(server):
                     ],
                     value='features'
                 ),
-                html.Br(),
-                html.P("Type a number to substitute all the missing values"),
-                dbc.Input(type="number", min=0, max=10, step=1, id='input_int'),
-                html.Br(),
-                html.Div(children=[], id='inputbox_int'),
-                html.Br(),
-                html.Div(children=[], id='inputbox_int_fill'),
-                html.Br(),
-                html.Div(children=[], id='delete_single_output')
+                html.Div(id='single_commands'),
 
             ])
 
@@ -210,15 +202,7 @@ def create_EDA(server):
                     ],
                     value='features'
                 ),
-                html.Br(),
-                html.P("Type a text to Replace the missing values"),
-                dbc.Input(type="text", min=0, max=10, step=1, pattern= '[a-zA-Z]*',id='input_str'),
-                html.Br(),
-                html.Div(children=[], id='inputbox_str'),
-                html.Br(),
-                html.Div(children=[], id='inputbox_str_fill'),
-                html.Br(),
-                html.Div(children=[], id='delete_single_output')
+                html.Div(id='single_commands'),
             ])
         elif value == 'float':
             return html.Div([
@@ -231,9 +215,43 @@ def create_EDA(server):
                     ],
                     value='features'
                 ),
+                html.Div(id='single_commands'),
+            ])
+
+    @dash_app.callback(dash.dependencies.Output('single_commands', 'children'),
+                       [dash.dependencies.Input('dropdown', 'value')])
+    def render_single_commands(value):
+        global_df = pd.read_csv(FILE_PATH)
+        features = categorize_feature(global_df)
+
+        if value in features[0]:
+            return html.Div([
                 html.Br(),
                 html.P("Type a number to substitute all the missing values"),
-                dbc.Input(type="number", min=0, max=10, step=1,id='input_float'),
+                dbc.Input(type="number", min=0, max=10, step=1, id='input_int'),
+                html.Br(),
+                html.Div(children=[], id='inputbox_int'),
+                html.Br(),
+                html.Div(children=[], id='inputbox_int_fill'),
+                html.Br(),
+                html.Div(children=[], id='delete_single_output')])
+        elif value in features[1]:
+            return html.Div([
+                html.Br(),
+                html.P("Type a text to Replace the missing values"),
+                dbc.Input(type="text", min=0, max=10, step=1, pattern='[a-zA-Z]*', id='input_str'),
+                html.Br(),
+                html.Div(children=[], id='inputbox_str'),
+                html.Br(),
+                html.Div(children=[], id='inputbox_str_fill'),
+                html.Br(),
+                html.Div(children=[], id='delete_single_output')
+            ])
+        elif value in features[2]:
+            return html.Div([
+                html.Br(),
+                html.P("Type a number to substitute all the missing values"),
+                dbc.Input(type="number", min=0, max=10, step=1, id='input_float'),
                 html.Br(),
                 html.Div(children=[], id='inputbox_float'),
                 html.Br(),
@@ -407,13 +425,13 @@ def create_EDA(server):
         if n_clicks is None:
             return "Action not made"
         else:
-            df1 = global_df
-            df1.fillna(value= {feature:value},inplace=True).to_csv(FILE_PATH)
-            print(df1[feature].isna().sum())
-            print(df1[feature])
+            global_df.fillna(value= {feature:value},inplace=True).to_csv(FILE_PATH)
+            print(global_df[feature].isna().sum())
+            print(global_df[feature])
             return u'''The feature "{}" has been auto_filled with {}
                                                     '''.format(
                 feature, value )
+
     @dash_app.callback(
         dash.dependencies.Output('inputbox_str_fill', 'children'),
         [dash.dependencies.Input('input_submit_button_str', 'n_clicks')],
@@ -425,10 +443,9 @@ def create_EDA(server):
         if n_clicks is None:
             return "Action not made"
         else:
-            df1 = global_df
-            df1.fillna(value= {feature:value},inplace=True).to_csv(FILE_PATH)
-            print(df1[feature].isna().sum())
-            print(df1[feature])
+            global_df.fillna(value= {feature:value},inplace=True).to_csv(FILE_PATH)
+            print(global_df[feature].isna().sum())
+            print(global_df[feature])
             return u'''The feature "{}" has been auto_filled with {}
                                                     '''.format(
                 feature, value )
@@ -439,13 +456,14 @@ def create_EDA(server):
         [dash.dependencies.State('dropdown', 'value'),
          dash.dependencies.State('input_int', 'value')],)
     def fill_int(n_clicks, feature, value):
+        global_df = pd.read_csv(FILE_PATH)
+        print(feature)
         if n_clicks is None:
             return "Action not made"
         else:
-            df1 = pd.read_csv(FILE_PATH)
-            df1.fillna(value= {feature:value},inplace=True).to_csv(FILE_PATH)
-            print(df1[feature].isna().sum())
-            print(df1[feature])
+            global_df.fillna(value= {feature:value},inplace=True).to_csv(FILE_PATH)
+            print(global_df[feature].isna().sum())
+            print(global_df[feature])
             return u'''The feature "{}" has been auto_filled with {}
                                                     '''.format(
                 feature, value )
@@ -459,9 +477,10 @@ def create_EDA(server):
         if n_clicks is None:
             return "Click the Delete Feature button if you would like to Delete this Feature"
         else:
-            global_df = pd.read_csv(FILE_PATH)
-            df3 = global_df.drop(value, axis=1).to_csv(FILE_PATH)
-            print(df3.head())
+            global_df = pd.read_csv(FILE_PATH,index_col=0)
+            global_df.drop(value, axis=1, inplace=True)
+            global_df.to_csv(FILE_PATH)
+            print(global_df.head())
             return u'''The feature "{}" has been deleted
                         '''.format(
                 value, )
