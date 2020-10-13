@@ -12,6 +12,9 @@ from .layouts.layout import html_layout
 from dash.exceptions import PreventUpdate
 import requests
 
+# from .layouts.EDA_layout import EDA_layout
+# from .EDA_callbacks import EDA_callback
+
 ## size convert
 import enum
 # Enum for size units
@@ -64,9 +67,11 @@ def dataDownload(server):
     app = dash.Dash(server=server,
                          routes_pathname_prefix='/dashapp/',
                          external_stylesheets=[
-                             'https://codepen.io/dapraxis/pen/gOPGzPj.css',
+                             dbc.themes.BOOTSTRAP,
                              '/static/dist/css/styles.css',
-                             'https://fonts.googleapis.com/css?family=Lato'
+                             'https://fonts.googleapis.com/css?family=Lato',
+                             'https://codepen.io/chriddyp/pen/bWLwgP.css',
+                             'https://codepen.io/chriddyp/pen/bWLwgP.css'
                              ])
 
     allData = {'BRFSS':'1tNWPT9xW1jc3Qta_h4CGHp9lRbHM1540'}
@@ -78,8 +83,9 @@ def dataDownload(server):
     df = pd.DataFrame([])
     # df.to_csv(os.stat(r`str(os.getcwd())+'\\uploads\\'+str('download.csv')`))
     df.to_csv(r'download.csv')
-
-    app.layout = html.Div([
+    
+    org_layout = html.Div([
+        html.Div([], id='hidden-div', style={'display': 'none'}),
         dcc.Dropdown(
             id='demo-dropdown',
             options=[
@@ -103,6 +109,21 @@ def dataDownload(server):
             'margin': '5% 15%',
             # 'text-align': 'center',
         })
+
+    app.layout = html.Div([
+        dcc.Location(id='url', refresh=False),
+        html.Div(id='page-content')
+    ])
+    
+    # @app.callback(Input('test', 'n_clicks'))
+    
+    @app.callback(Output('page-content', 'children'),
+              [Input('url', 'pathname')])
+    def display_page(pathname):
+        if pathname == '/dashapp/':
+            return org_layout
+        
+            # return '404'
 
     @app.callback(
         dash.dependencies.Output('dd-output-container', 'children'),
@@ -160,7 +181,7 @@ def dataDownload(server):
             ),
 
             html.Hr(),  # horizontal line
-            html.A(html.Button('Next', id='btn'), href='/EDA')
+            html.A(html.Button('Next', id='btn'), href='/EDA/')
             ], type='cube')
         ])
 

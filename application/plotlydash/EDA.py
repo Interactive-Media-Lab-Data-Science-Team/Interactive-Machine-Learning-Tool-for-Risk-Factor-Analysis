@@ -33,31 +33,18 @@ contents2 = file2.read()
 categories = ast.literal_eval(contents2)
 file2.close()
 
+global_df = pd.read_csv(FILE_PATH)
 
-def create_EDA(server):
-    dash_app = dash.Dash(name='EDA', server=server, url_base_pathname='/EDA/', external_stylesheets=[
-                             dbc.themes.BOOTSTRAP,
-                             '/static/dist/css/styles.css',
-                             'https://fonts.googleapis.com/css?family=Lato',
-                             'https://codepen.io/chriddyp/pen/bWLwgP.css',
-                             'https://codepen.io/chriddyp/pen/bWLwgP.css'
-                             ]
-                    )
-    dash_app.index_string = html_layout
 
-    # df = pd.read_csv(FILE_PATH)
-    # df.to_csv(BACK_UP_PATH)
 
-    global_df = pd.read_csv(FILE_PATH)
-
-    left_margin = 200
-    right_margin = 100
-    dash_app.layout = html.Div(children =[
+def server_layout():
+    return html.Div(children =[
 
 #Div that contains the title and description section
         html.Div(children=[
             html.H2('Exploratory Data Analysis'),
             html.H1('Data explore, data visualization'),
+            dcc.Interval('interval-component', n_intervals=0, interval=1*1000)
         ],style={'textAlign': 'center'}),
 
 #Div that contains the buttons
@@ -67,29 +54,29 @@ def create_EDA(server):
 #hidden div
             html.Div([
 
-            ], id='hidden-div',),
+            ], id='hidden-div', style={'display': 'none'}),
 #modal
-            html.Div(
-                [
-                    dbc.Button("Open modal", id="open"),
-                    dbc.Modal(
-                        [
-                            dbc.ModalHeader("Header"),
-                            dbc.ModalBody("This is the content of the modal"),
-                            dbc.ModalFooter(
-                                dbc.Button("Close", id="close", className="ml-auto")
-                            ),
-                        ],
-                        id="modal", is_open = True, backdrop="static"
-                    ),
-                ]
-            ),
+            # html.Div(
+            #     [
+            #         dbc.Button("Open modal", id="open", style={'display': 'none'}),
+            #         dbc.Modal(
+            #             [
+            #                 dbc.ModalHeader("Header"),
+            #                 dbc.ModalBody("This is the content of the modal"),
+            #                 dbc.ModalFooter(
+            #                     dbc.Button("Close", id="close", className="ml-auto")
+            #                 ),
+            #             ],
+            #             id="modal", is_open = True, backdrop="static"
+            #         ),
+            #     ]
+            # ),
 
             #buttons for page control
             html.Div([
                 html.A(html.Button('Previous page', style={'fontSize': '12px'}), href='/dashapp/'),
             ], className='two columns'),
-            html.Div([html.A(html.Button('Next page', style={'fontSize': '12px'}), href='/data_cleaning/'),
+            html.Div([html.A(html.Button('Next page', style={'fontSize': '12px'}), href='/RFA/'),
             ], className='two columns'),
         ], className= 'row'),
         html.Br(),
@@ -128,18 +115,20 @@ def create_EDA(server):
                    html.Br(),
 
                    # graph
-                   dcc.Graph(
-                       figure={"layout": {
-                           "xaxis": {"visible": False},
-                           "yaxis": {"visible": False},
-                           "annotations": [{
-                               "text": "Please Select the Feature you would like to Visualize",
-                               "xref": "paper",
-                               "yref": "paper",
-                               "showarrow": False,
-                               "font": {"size": 28}
-                           }]
-                       }}, id='dd-figure'),
+                   dcc.Loading(id='graph_loading', children=[
+                        dcc.Graph(
+                        figure={"layout": {
+                            "xaxis": {"visible": False},
+                            "yaxis": {"visible": False},
+                            "annotations": [{
+                                "text": "Please Select the Feature you would like to Visualize",
+                                "xref": "paper",
+                                "yref": "paper",
+                                "showarrow": False,
+                                "font": {"size": 28}
+                            }]
+                        }}, id='dd-figure'),
+                   ])
 
                ], className='eight columns'),
            ], className='row')
@@ -148,7 +137,32 @@ def create_EDA(server):
     ], id='dash-container')
 
 
+def create_EDA(server):
+    dash_app = dash.Dash(name='EDA', server=server, url_base_pathname='/EDA/', external_stylesheets=[
+                             dbc.themes.BOOTSTRAP,
+                             '/static/dist/css/styles.css',
+                             'https://fonts.googleapis.com/css?family=Lato',
+                             'https://codepen.io/chriddyp/pen/bWLwgP.css',
+                             'https://codepen.io/chriddyp/pen/bWLwgP.css'
+                             ]
+                    )
+    dash_app.index_string = html_layout
 
+    # df = pd.read_csv(FILE_PATH)
+    # df.to_csv(BACK_UP_PATH)
+
+    left_margin = 200
+    right_margin = 100
+    
+    dash_app.layout = server_layout
+
+
+    @dash_app.callback(dash.dependencies.Output("hidden-div", "children"),
+              [dash.dependencies.Input("interval-component", "n_intervals")])
+    def update_df(n):
+        global global_df 
+        global_df= pd.read_csv(FILE_PATH)
+        return dash.no_update
 
 
     @dash_app.callback(dash.dependencies.Output('dropdown_content', 'children'),
@@ -194,12 +208,13 @@ def create_EDA(server):
 
     @dash_app.callback(
         dash.dependencies.Output('dd-output-container', 'children'),
-        [dash.dependencies.Input('dropdown', 'value'), dash.dependencies.Input("hidden-div", 'children')])
+        # [dash.dependencies.Input('dropdown', 'value'), dash.dependencies.Input("hidden-div", 'children')])
+        [dash.dependencies.Input('dropdown', 'value')])
 
-    def preparation_tab_information_report(value, children):
+    def preparation_tab_information_report(value):
         str_value = str(value)
-        df = children
-        R_dict = df[str_value].describe().to_dict()
+        global global_df
+        R_dict = global_df[str_value].describe().to_dict()
         result = list()
         for key in R_dict:
              result.append('{}: {}'.format(key, R_dict[key]))
@@ -218,34 +233,37 @@ def create_EDA(server):
 
     @dash_app.callback(
         dash.dependencies.Output('dd-figure', 'figure'),
-        [dash.dependencies.Input('dropdown', 'value'),dash.dependencies.Input("hidden-div", 'children')])
+        # [dash.dependencies.Input('dropdown', 'value'),dash.dependencies.Input("hidden-div", 'children')])
+        [dash.dependencies.Input('dropdown', 'value')])
 
-    def preparation_tab_visualize_features(value,chilren):
-        df = chilren
+    def preparation_tab_visualize_features(value):
+        global global_df
         integers = categories[0]
         floats = categories[1]
         str_value = str(value)
-        print(integers)
-        print(floats)
         if str_value in integers:
-            fig = px.histogram(df[str_value], y=str_value)
+            fig = px.histogram(global_df[str_value], y=str_value)
         elif str_value in floats:
-            fig = px.box(df[str_value], y=str_value)
+            fig = px.box(global_df[str_value], y=str_value)
         else:
-            fig = px.histogram(df[str_value], y=str_value)
+            fig = px.histogram(global_df[str_value], y=str_value)
         return fig
 
-    @dash_app.callback(
-        [dash.dependencies.Output("modal", "is_open"), dash.dependencies.Output('hidden-div', 'children')],
-        [dash.dependencies.Input("close", "n_clicks")],
-        [dash.dependencies.State("modal", "is_open")],
-    )
-    def toggle_modal(n2, is_open):
-        if n2:
-            global_df = pd.read_csv(FILE_PATH)
-            print(global_df.size)
-            return not is_open , global_df
-        return is_open, None
+    # @dash_app.callback(
+    #     # [dash.dependencies.Output("modal", "is_open"), dash.dependencies.Output('hidden-div', 'children')],
+    #     dash.dependencies.Output("modal", "is_open"),
+    #     [dash.dependencies.Input("close", "n_clicks")],
+    #     [dash.dependencies.State("modal", "is_open")],
+    # )
+    # def toggle_modal(n2, is_open):
+    #     if n2:
+    #         # print(global_df.size)
+    #     #     return not is_open , global_df.to_json(date_format='iso', orient='split')
+    #     # return is_open, None
+    #         global global_df
+    #         global_df = pd.read_csv(FILE_PATH)
+    #         return not is_open
+    #     return is_open
 
 
 

@@ -14,7 +14,7 @@ html_layout = '''
               <div class="nav-wrapper">
                 <a href="/">
                     <img src="/static/img/logo.png" class="logo" />
-                    <h1>Data Preprocessing Tool</h1>
+                    <h1>Interactive Machine Learning Tool</h1>
                   </a>
                 <nav>
                 </nav>
