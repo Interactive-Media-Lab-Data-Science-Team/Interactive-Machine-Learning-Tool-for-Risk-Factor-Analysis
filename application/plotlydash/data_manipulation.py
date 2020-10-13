@@ -4,7 +4,8 @@ import plotly.express as px
 import pandas as pd
 import  json
 
-FILE_PATH = '/Users/wenchenliu/Desktop/dpt/cleaned_BRFSS.csv'
+# FILE_PATH = '/Users/wenchenliu/Desktop/dpt/cleaned_BRFSS.csv'
+FILE_PATH = '/Users/wenchenliu/Desktop/Interactive-Machine-Learning-Tool-for-Risk-Factor-Analysis/download.csv'
 df = pd.read_csv(FILE_PATH)
 
 file = open('/Users/wenchenliu/Desktop/Interactive-Machine-Learning-Tool-for-Risk-Factor-Analysis/data/var_info.txt', 'r')
@@ -64,18 +65,18 @@ def categorize_features(df):
 #
 m = categorize_features(df)
 print(len(m))
-with open('/Users/wenchenliu/Desktop/Interactive-Machine-Learning-Tool-for-Risk-Factor-Analysis/data/categorized_type', 'w') as file1:
+with open('/Users/wenchenliu/Desktop/Interactive-Machine-Learning-Tool-for-Risk-Factor-Analysis/data/categorized_type.txt', 'w') as file1:
     file1.write(json.dumps(m))
 
 
 
 #_-_______________________________
-file2 = open('data/categorized_type', 'r')
-contents2 = file2.read()
-categories = ast.literal_eval(contents2)
-file2.close()
-
-categories
+# file2 = open('data/categorized_type', 'r')
+# contents2 = file2.read()
+# categories = ast.literal_eval(contents2)
+# file2.close()
+#
+# categories
 
 
 # print(df)
@@ -86,5 +87,5 @@ categories
 # 364360    56.0
 # m = find_correspond_feature(section_name_dictionary(dictionary), dictionary)
 # print(len(m))
-# with open('/Users/wenchenliu/Desktop/Interactive-Machine-Learning-Tool-for-Risk-Factor-Analysis/data/section_name', 'w') as file1:
+# with open('/Users/wenchenliu/Desktop/Interactive-Machine-Learning-Tool-for-Risk-Factor-Analysis/data/section_name.txt', 'w') as file1:
 #     file1.write(json.dumps(m))
