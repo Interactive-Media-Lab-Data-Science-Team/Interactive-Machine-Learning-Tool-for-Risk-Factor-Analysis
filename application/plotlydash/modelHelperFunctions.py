@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import LinearRegression, LassoCV, RidgeCV, LassoLarsCV, ElasticNetCV, BayesianRidge, LogisticRegressionCV
+from sklearn.linear_model import LinearRegression, Lasso, Ridge, LassoLars, ElasticNet, BayesianRidge, LogisticRegression
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.metrics import roc_auc_score, accuracy_score, precision_score, recall_score, f1_score, log_loss
@@ -39,7 +39,7 @@ def classification_performance(y_true, y_pred):
     return accuracy, roc_auc, precision, recall, f1
 
 
-def regression_models(X, y, model_type, norm=False):
+def regression_models(X, y, model_type, norm=False, alpha=1.0):
     """Regression models 
     Args:
         X (2D array): Regressor
@@ -47,22 +47,22 @@ def regression_models(X, y, model_type, norm=False):
         model_type (String): "Linear", "Lasso", "Ridge", "LassoLars", "Bayesian Ridge", "Elastic Net"
         normalize (boolean): Normalize or not (if applicable) 
     Returns:
-        regression model, MAE, MSE, R-squared, mean Gamma Deviance 
+        regression model, MAE, MSE, R-squared 
     """
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
     if model_type == "Linear":
         reg = LinearRegression(normalize=norm).fit(X_train, y_train)
     elif model_type == "Lasso":
-        reg = LassoCV(cv=5, n_alphas=50, normalize=norm).fit(X_train, y_train)
+        reg = Lasso(alpha=alpha, normalize=norm).fit(X_train, y_train)
     elif model_type == "Ridge":
-        reg = RidgeCV(normalize=norm).fit(X_train, y_train)
+        reg = Ridge(alpha=alpha, normalize=norm).fit(X_train, y_train)
     elif model_type == "LassoLars":
-        reg = LassoLarsCV(normalize=norm).fit(X_train, y_train)
+        reg = LassoLars(alpha=alpha, normalize=norm).fit(X_train, y_train)
     elif model_type == "Bayesian Ridge":
         reg = BayesianRidge(normalize=norm).fit(X_train, y_train)
     elif model_type == "Elastic Net":
-        reg = ElasticNetCV(normalize=norm).fit(X_train, y_train)
+        reg = ElasticNet(alpha=alpha, normalize=norm).fit(X_train, y_train)
     else:
         return None
     y_pred = reg.predict(X_test)
@@ -70,7 +70,7 @@ def regression_models(X, y, model_type, norm=False):
     return reg, mae, mse, r2
 
 
-def classification_models(X, y, model_type, norm=False):
+def classification_models(X, y, model_type, norm=False, C=1.0):
     """Classification models
     Args:
          X (2D array): Regressor
@@ -85,7 +85,7 @@ def classification_models(X, y, model_type, norm=False):
         X_train = StandardScaler().fit_transform(X_train)
         X_test = StandardScaler().fit_transform(X_test)
     if model_type == "Logistic":
-        clf = LogisticRegressionCV().fit(X_train, y_train)
+        clf = LogisticRegression(C=1/C).fit(X_train, y_train)
     elif model_type == "LDA":
         clf = LinearDiscriminantAnalysis().fit(X_train, y_train)
     else:
@@ -110,4 +110,4 @@ def risk_factor_analysis(model, cols):
     sort_coef = sorted(np.abs(coef), reverse=True)
     sort_index = sorted(
         range(len(coef)), key=lambda k: np.abs(coef)[k], reverse=True)
-    return [{"Rank": i+1, "Factor": cols[sort_index[i]], "ABS weight": round(sort_coef[i], 5), "sign": sign[sort_index[i]]} for i in range(len(coef))]
+    return [{"Rank": i+1, "Factor": cols[sort_index[i]], "Absolute Weight": round(sort_coef[i], 5), "Sign": sign[sort_index[i]]} for i in range(len(coef))]

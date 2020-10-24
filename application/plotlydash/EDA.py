@@ -28,7 +28,7 @@ contents1 = file1.read()
 dictionary_name = ast.literal_eval(contents1)
 file1.close()
 
-file2 = open('data/categorized_type', 'r')
+file2 = open('data/categorized_type.txt', 'r')
 contents2 = file2.read()
 categories = ast.literal_eval(contents2)
 file2.close()
@@ -73,11 +73,6 @@ def server_layout():
             # ),
 
             #buttons for page control
-            html.Div([
-                html.A(html.Button('Previous page', style={'fontSize': '12px'}), href='/dashapp/'),
-            ], className='two columns'),
-            html.Div([html.A(html.Button('Next page', style={'fontSize': '12px'}), href='/RFA/'),
-            ], className='two columns'),
         ], className= 'row'),
         html.Br(),
 
@@ -96,11 +91,17 @@ def server_layout():
                        value='features'
                    ),
                    html.Div(id='dropdown_content'),
+                    html.Div([
+                        html.Br(),
+                        html.A(html.Button('Back', style={'fontSize': '12px'}), href='/dashapp/'),
+                        ], className='four columns'),
+                    html.Div([
+                        html.Br(),
+                        html.A(html.Button('Next', style={'fontSize': '12px'}), href='/RFA/'),
+                    ], className='four columns'),
                ], className='four columns'),
 
                html.Div([
-
-
                    # html.H3('Data Summary'),
                    html.Div([
                        html.Div([
@@ -115,21 +116,9 @@ def server_layout():
                    html.Br(),
 
                    # graph
-                   dcc.Loading(id='graph_loading', children=[
-                        dcc.Graph(
-                        figure={"layout": {
-                            "xaxis": {"visible": False},
-                            "yaxis": {"visible": False},
-                            "annotations": [{
-                                "text": "Please Select the Feature you would like to Visualize",
-                                "xref": "paper",
-                                "yref": "paper",
-                                "showarrow": False,
-                                "font": {"size": 28}
-                            }]
-                        }}, id='dd-figure'),
+                   html.Div(id = 'graph_plot', children=[
+                    
                    ])
-
                ], className='eight columns'),
            ], className='row')
         ]),
@@ -207,7 +196,8 @@ def create_EDA(server):
         return div
 
     @dash_app.callback(
-        dash.dependencies.Output('dd-output-container', 'children'),
+        [dash.dependencies.Output('dd-output-container', 'children'),
+         dash.dependencies.Output('graph_plot', 'children')],
         # [dash.dependencies.Input('dropdown', 'value'), dash.dependencies.Input("hidden-div", 'children')])
         [dash.dependencies.Input('dropdown', 'value')])
 
@@ -215,7 +205,7 @@ def create_EDA(server):
         str_value = str(value)
         global global_df
         R_dict = global_df[str_value].describe().to_dict()
-        result = list()
+        result = []
         for key in R_dict:
              result.append('{}: {}'.format(key, R_dict[key]))
 
@@ -227,7 +217,22 @@ def create_EDA(server):
                 html.Ul([html.Li(x) for x in result])
             ]),
         ])
-        return div
+        
+        g = dcc.Loading(id='graph_loading', children=[
+                            dcc.Graph(
+                            figure={"layout": {
+                                "xaxis": {"visible": False},
+                                "yaxis": {"visible": False},
+                                "annotations": [{
+                                    "text": "Please Select the Feature you would like to Visualize",
+                                    "xref": "paper",
+                                    "yref": "paper",
+                                    "showarrow": False,
+                                    "font": {"size": 28}
+                                }]
+                            }}, id='dd-figure'),
+                        ])
+        return [div, g]
 
         # Define a function for drawing box plot for selected feature
 

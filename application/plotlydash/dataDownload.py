@@ -67,11 +67,9 @@ def dataDownload(server):
     app = dash.Dash(server=server,
                          routes_pathname_prefix='/dashapp/',
                          external_stylesheets=[
-                             dbc.themes.BOOTSTRAP,
+                             'https://codepen.io/dapraxis/pen/gOPGzPj.css',
                              '/static/dist/css/styles.css',
-                             'https://fonts.googleapis.com/css?family=Lato',
-                             'https://codepen.io/chriddyp/pen/bWLwgP.css',
-                             'https://codepen.io/chriddyp/pen/bWLwgP.css'
+                             'https://fonts.googleapis.com/css?family=Lato'
                              ])
 
     allData = {'BRFSS':'1tNWPT9xW1jc3Qta_h4CGHp9lRbHM1540'}
