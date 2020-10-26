@@ -28,7 +28,7 @@ contents1 = file1.read()
 dictionary_name = ast.literal_eval(contents1)
 file1.close()
 
-file2 = open('data/categorized_type', 'r')
+file2 = open('data/categorized_type.txt', 'r')
 contents2 = file2.read()
 categories = ast.literal_eval(contents2)
 file2.close()
