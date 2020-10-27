@@ -13,18 +13,20 @@ from .modelHelperFunctions import regression_models, classification_models, risk
 import dash_bootstrap_components as dbc
 
 
-# FILE_PATH = 'download.csv'
-FILE_PATH = 'data/download.csv'
+FILE_PATH = 'download.csv'
+#FILE_PATH = 'data/download.csv'
 VAR_PATH = 'data/var_info.txt'
 SECTION_PATH = 'data/section_name.txt'
 REGRESSON_LIST = ["Linear", "Lasso", "Ridge",
                   "LassoLars", "Bayesian Ridge", "Elastic Net"]
 REG_CRITERION = ['Index', 'Label', 'Model', 'Penalty', 'MAE', 'MSE']
 CLASSIFICATION_LIST = ["Logistic", "LDA"]
+#CLF_CRITERION = ["Index", "Label", "Model", "Penalty", "Accuracy", "ROC_AUC score", "Precision", "Recall", "F1-Score"]
 CLF_CRITERION = ["Index", "Label", "Model", "Penalty",
-                 "Accuracy", "ROC_AUC score", "Precision", "Recall", "F1-Score"]
+                 "Accuracy", "Precision", "Recall", "F1-Score"]
 
-df = pd.read_csv(FILE_PATH)[:2000]
+
+df = pd.read_csv(FILE_PATH)[:5000]
 
 
 def load_info_dict(file):
@@ -193,62 +195,61 @@ def serve_layout():
                         html.Summary("Performance of History Models"),
                         html.Div(
                             [
-                            html.Div([
-                                html.Details(
-                                    [
-                                    html.Summary(
-                                        "Performance Records for Regression Model"),
-                                    html.Div(
-                                        dash_table.DataTable(
-                                            id="reg_rec",
-                                            columns=[{'name': val, 'id': val}
-                                                    for val in REG_CRITERION],
-                                            data=[],
-                                            style_cell={
-                                                'height': 'auto',
-                                                # all three widths are needed
-                                                'minWidth': '100px', 'width': '160px', 'maxWidth': '240px',
-                                                'marginLeft': '30px',
-                                                'whiteSpace': 'normal',
-                                                'textAlign': 'right'
-                                            }
-                                        )
-                                    ),
-                                    ]
-                                )
-                            ]),
+                                html.Div([
+                                    html.Details(
+                                        [
+                                            html.Summary(
+                                                "Performance Records for Regression Model"),
+                                            html.Div(
+                                                dash_table.DataTable(
+                                                    id="reg_rec",
+                                                    columns=[{'name': val, 'id': val}
+                                                             for val in REG_CRITERION],
+                                                    data=[],
+                                                    style_cell={
+                                                        'height': 'auto',
+                                                        # all three widths are needed
+                                                        'minWidth': '100px', 'width': '160px', 'maxWidth': '240px',
+                                                        'marginLeft': '30px',
+                                                        'whiteSpace': 'normal',
+                                                        'textAlign': 'right'
+                                                    }
+                                                )
+                                            ),
+                                        ]
+                                    )
+                                ]),
 
-                            html.Div([
-                                html.Details(
-                                    [
-                                    html.Summary(
-                                        "Performance Records for Classification Model"),
-                                    html.Div(
-                                        dash_table.DataTable(
-                                            id="clf_rec",
-                                            columns=[{'name': val, 'id': val}
-                                                    for val in CLF_CRITERION],
-                                            data=[],
-                                            style_cell={
-                                                'height': 'auto',
-                                                'textAlign': 'right'
-                                                # all three widths are needed
-                                                # 'minWidth': '180px', 'width': '180px', 'maxWidth': '180px',
-                                                # 'minWidth': '100px', 'width': '120px', 'maxWidth': '240px',
-                                                # 'whiteSpace': 'normal'
-                                            }
-                                        )
-                                    ),
-                                    ]
-                                )
-                            ]),
-                            ]
-                        , style={'marginLeft':40})
+                                html.Div([
+                                    html.Details(
+                                        [
+                                            html.Summary(
+                                                "Performance Records for Classification Model"),
+                                            html.Div(
+                                                dash_table.DataTable(
+                                                    id="clf_rec",
+                                                    columns=[{'name': val, 'id': val}
+                                                             for val in CLF_CRITERION],
+                                                    data=[],
+                                                    style_cell={
+                                                        'height': 'auto',
+                                                        'textAlign': 'right'
+                                                        # all three widths are needed
+                                                        # 'minWidth': '180px', 'width': '180px', 'maxWidth': '180px',
+                                                        # 'minWidth': '100px', 'width': '120px', 'maxWidth': '240px',
+                                                        # 'whiteSpace': 'normal'
+                                                    }
+                                                )
+                                            ),
+                                        ]
+                                    )
+                                ]),
+                            ], style={'marginLeft': 40})
                     ]
                 )
 
             ])
-        ], id='dash-container', style={'marginBottom':40})
+        ], id='dash-container', style={'marginBottom': 40})
 
 
 def create_RFA(server):
@@ -300,7 +301,7 @@ def create_RFA(server):
     @dash_app.callback([Output('RFA_output', 'children'),
                         Output('reg_rec', 'data'),
                         Output('clf_rec', 'data'),
-                        Output('popover', 'is_open'),],
+                        Output('popover', 'is_open'), ],
                        [Input('run_button', 'n_clicks')],
                        [State('feature_dropdown', 'value'),
                         State('type_dropdown', 'value'),
@@ -312,8 +313,8 @@ def create_RFA(server):
     def perform_risk_factor_analysis(n_clicks, label, task_type, model_type, penalty, num_of_factor, reg_data, clf_data):
         global df
         if n_clicks > 0:
-            
-            if((label ==  None) or (task_type==None) or (model_type==None)):
+
+            if((label == None) or (task_type == None) or (model_type == None)):
                 return [], reg_data, clf_data, True,
             y = df[label]
             X = df.drop([label], axis=1)
@@ -328,9 +329,9 @@ def create_RFA(server):
                         dash_table.DataTable(
                             id="reg_table",
                             columns=[{'name': val, 'id': val}
-                                    for val in REG_CRITERION[1:]],
+                                     for val in REG_CRITERION[1:]],
                             data=[{"Label": label, 'Model': model_type, 'Penalty': penalty, 'MAE': round(model_res[1], 5), 'MSE':round(model_res[2], 5),
-                                'R2':round(model_res[3], 5)}],
+                                   'R2':round(model_res[3], 5)}],
                             style_cell={
                                 'height': 'auto',
                                 'textAlign': 'right'
@@ -353,8 +354,8 @@ def create_RFA(server):
                             id="clf_table",
                             columns=[{'name': val, 'id': val}
                                      for val in CLF_CRITERION[1:]],
-                            data=[{"Label": label, 'Model': model_type, "Penalty": penalty, "Accuracy": round(model_res[1], 5), "ROC_AUC score":round(model_res[2], 5),
-                                   "Precision":round(model_res[3], 5), "Recall":round(model_res[4], 5), "F1-Score":round(model_res[5], 5)}],
+                            data=[{"Label": label, 'Model': model_type, "Penalty": penalty, "Accuracy": round(model_res[1], 5),
+                                   "Precision":round(model_res[2], 5), "Recall":round(model_res[3], 5), "F1-Score":round(model_res[4], 5)}],
                             style_cell={
                                 'height': 'auto',
                                 'textAlign': 'right'
@@ -411,7 +412,7 @@ def create_RFA(server):
                                 'backgroundColor': '#85144b',
                                 'color': 'white'
                             },
-                            ],
+                        ],
                     )
                 ),
 
@@ -425,8 +426,8 @@ def create_RFA(server):
                 return layout, reg_data + [{"Index": len(reg_data)+1, "Label": label, 'Model': model_type, 'Penalty': penalty, 'MAE': round(model_res[1], 5), 'MSE':round(model_res[2], 5),
                                             }], clf_data, False
             elif task_type == "Classification":
-                return layout, reg_data, clf_data + [{"Index": len(clf_data)+1, "Label": label, 'Model': model_type, "Penalty": penalty, "Accuracy": round(model_res[1], 5), "ROC_AUC score":round(model_res[2], 5),
-                                                      "Precision":round(model_res[3], 5), "Recall":round(model_res[4], 5), "F1-Score":round(model_res[5], 5)}], None
+                return layout, reg_data, clf_data + [{"Index": len(clf_data)+1, "Label": label, 'Model': model_type, "Penalty": penalty, "Accuracy": round(model_res[1], 5),
+                                                      "Precision":round(model_res[2], 5), "Recall":round(model_res[3], 5), "F1-Score":round(model_res[4], 5)}], None
             else:
                 return [], reg_data, clf_data, False
         else:

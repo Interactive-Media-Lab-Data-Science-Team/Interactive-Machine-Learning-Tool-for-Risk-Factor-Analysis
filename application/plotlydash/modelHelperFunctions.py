@@ -1,3 +1,4 @@
+import ast
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LinearRegression, Lasso, Ridge, LassoLars, ElasticNet, BayesianRidge, LogisticRegression
@@ -6,6 +7,17 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.metrics import roc_auc_score, accuracy_score, precision_score, recall_score, f1_score, log_loss
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+
+
+def load_info_dict(file):
+    f = open(file, 'r')
+    cont = f.read()
+    f.close()
+    return ast.literal_eval(cont)
+
+
+VAR_PATH = 'data/var_info.txt'
+var_info = load_info_dict(VAR_PATH)
 
 
 def regression_performance(y_true, y_pred):
@@ -30,13 +42,14 @@ def classification_performance(y_true, y_pred):
     Returns:
         Accuracy, ROC_AUC score, Precision, Recall, F1-Score
     """
-    roc_auc = roc_auc_score(y_true, y_pred)
+    #roc_auc = roc_auc_score(y_true, y_pred, multi_class='ovo')
     accuracy = accuracy_score(y_true, y_pred)
     precision = precision_score(y_true, y_pred)
     recall = recall_score(y_true, y_pred)
     f1 = f1_score(y_true, y_pred)
 
-    return accuracy, roc_auc, precision, recall, f1
+    # return accuracy, roc_auc, precision, recall, f1
+    return accuracy, precision, recall, f1
 
 
 def regression_models(X, y, model_type, norm=False, alpha=1.0):
@@ -94,7 +107,8 @@ def classification_models(X, y, model_type, norm=False, C=1.0):
     accuracy, roc_auc, precision, recall, f1 = classification_performance(
         y_test, y_pred)
 
-    return clf, accuracy, roc_auc, precision, recall, f1
+    # return clf, accuracy, roc_auc, precision, recall, f1
+    return clf, accuracy, precision, recall, f1
 
 
 def risk_factor_analysis(model, cols):
@@ -110,4 +124,5 @@ def risk_factor_analysis(model, cols):
     sort_coef = sorted(np.abs(coef), reverse=True)
     sort_index = sorted(
         range(len(coef)), key=lambda k: np.abs(coef)[k], reverse=True)
-    return [{"Rank": i+1, "Factor": cols[sort_index[i]], "Absolute Weight": round(sort_coef[i], 5), "Sign": sign[sort_index[i]]} for i in range(len(coef))]
+    return [{"Rank": i+1, "Factor": "{}:{}".format(cols[sort_index[i]], var_info.get(cols[sort_index[i]]).get('Label')),
+             "Absolute Weight": round(sort_coef[i], 5), "Sign": sign[sort_index[i]]} for i in range(len(coef))]
