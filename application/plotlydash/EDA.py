@@ -56,21 +56,23 @@ def server_layout():
 
             ], id='hidden-div', style={'display': 'none'}),
 #modal
-            # html.Div(
-            #     [
-            #         dbc.Button("Open modal", id="open", style={'display': 'none'}),
-            #         dbc.Modal(
-            #             [
-            #                 dbc.ModalHeader("Header"),
-            #                 dbc.ModalBody("This is the content of the modal"),
-            #                 dbc.ModalFooter(
-            #                     dbc.Button("Close", id="close", className="ml-auto")
-            #                 ),
-            #             ],
-            #             id="modal", is_open = True, backdrop="static"
-            #         ),
-            #     ]
-            # ),
+            html.Div(
+                [
+                    dbc.Button("Page Description", id="open", style={'display': 'none'}),
+                    dbc.Modal(
+                        [
+                            dbc.ModalHeader("Header"),
+                            dbc.ModalBody("EDA page allow you to select a specific feature within a specific category to visualize and provide summarize for their characteristics. "
+                                          "1. you must first select a section name in order to select its respective features. "
+                                          "2. you must then select the feature you would like visualize and the results will appear on the left of the page."),
+                            dbc.ModalFooter(
+                                dbc.Button("Close", id="close", className="ml-auto")
+                            ),
+                        ],
+                        id="modal", is_open = True, backdrop="static"
+                    ),
+                ]
+            ),
 
             #buttons for page control
         ], className= 'row'),
@@ -254,21 +256,16 @@ def create_EDA(server):
             fig = px.histogram(global_df[str_value], y=str_value)
         return fig
 
-    # @dash_app.callback(
-    #     # [dash.dependencies.Output("modal", "is_open"), dash.dependencies.Output('hidden-div', 'children')],
-    #     dash.dependencies.Output("modal", "is_open"),
-    #     [dash.dependencies.Input("close", "n_clicks")],
-    #     [dash.dependencies.State("modal", "is_open")],
-    # )
-    # def toggle_modal(n2, is_open):
-    #     if n2:
-    #         # print(global_df.size)
-    #     #     return not is_open , global_df.to_json(date_format='iso', orient='split')
-    #     # return is_open, None
-    #         global global_df
-    #         global_df = pd.read_csv(FILE_PATH)
-    #         return not is_open
-    #     return is_open
+    @dash_app.callback(
+        # [dash.dependencies.Output("modal", "is_open"), dash.dependencies.Output('hidden-div', 'children')],
+        dash.dependencies.Output("modal", "is_open"),
+        [dash.dependencies.Input("open", "n_clicks"),dash.dependencies.Input("close", "n_clicks")],
+        [dash.dependencies.State("modal", "is_open")],
+    )
+    def toggle_modal(n1, n2, is_open):
+        if n1 or n2:
+            return not is_open
+        return is_open
 
 
 
