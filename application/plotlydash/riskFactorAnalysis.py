@@ -16,6 +16,7 @@ import dash_bootstrap_components as dbc
 FILE_PATH = 'download.csv'
 #FILE_PATH = 'data/download.csv'
 VAR_PATH = 'data/var_info.txt'
+STATE_PATH = 'data/state_info.txt'
 SECTION_PATH = 'data/section_name.txt'
 REGRESSON_LIST = ["Linear", "Lasso", "Ridge",
                   "LassoLars", "Bayesian Ridge", "Elastic Net"]
@@ -38,8 +39,10 @@ def load_info_dict(file):
 
 var_info = load_info_dict(VAR_PATH)
 section_info = load_info_dict(SECTION_PATH)
+state_info = load_info_dict(STATE_PATH)
 
 SECTION = list(section_info.keys())
+STATE = list(state_info.keys())
 
 
 def serve_layout():
@@ -59,6 +62,24 @@ def serve_layout():
             dcc.Interval('interval-component', n_intervals=0, interval=1*1000),
 
             html.Div([
+
+                html.P(html.Label(
+                    "Please select a state: ")),
+                html.Div([
+                    dcc.Dropdown(
+                        id='state_dropdown',
+                        options=[
+                            {'label': col, 'value': state_info[col]} for col in STATE
+                        ],
+                        placeholder="Section",
+                        style=dict(
+                            width='80%',
+                            verticalAlign="middle"
+                        )
+                    )
+                ], style=dict(display='flex')),
+
+
                 html.P(html.Label(
                     "Please select a section: ")),
                 html.Div([
@@ -303,21 +324,24 @@ def create_RFA(server):
                         Output('clf_rec', 'data'),
                         Output('popover', 'is_open'), ],
                        [Input('run_button', 'n_clicks')],
-                       [State('feature_dropdown', 'value'),
+                       [State('state_dropdown', 'value'),
+                        State('feature_dropdown', 'value'),
                         State('type_dropdown', 'value'),
                         State('model_dropdown', 'value'),
                         State('penalty', 'value'),
                         State('num-of-factors', 'value'),
                         State('reg_rec', 'data'),
                         State('clf_rec', 'data')])
-    def perform_risk_factor_analysis(n_clicks, label, task_type, model_type, penalty, num_of_factor, reg_data, clf_data):
+    def perform_risk_factor_analysis(n_clicks, state, label, task_type, model_type, penalty, num_of_factor, reg_data, clf_data):
         global df
         if n_clicks > 0:
 
             if((label == None) or (task_type == None) or (model_type == None)):
-                return [], reg_data, clf_data, True,
-            y = df[label]
-            X = df.drop([label], axis=1)
+                return [], reg_data, clf_data, True
+
+            state_df = df[df['_STATE'] == state]
+            y = state_df[label]
+            X = state_df.drop([label], axis=1)
             col_names = X.columns
 
             if task_type == "Regression":
