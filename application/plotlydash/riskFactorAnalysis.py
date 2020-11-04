@@ -27,7 +27,8 @@ CLF_CRITERION = ["Index", "Label", "Model", "Penalty",
                  "Accuracy", "Precision", "Recall", "F1-Score"]
 
 
-df = pd.read_csv(FILE_PATH)[:5000]
+# df = pd.read_csv(FILE_PATH)[:5000]
+df = pd.read_csv(FILE_PATH)
 
 
 def load_info_dict(file):
@@ -194,7 +195,7 @@ def serve_layout():
                     html.Label(
                         "Proceed risk factor analysis and see the results"),
                     html.Hr(),
-                    html.Button('Run', id='run_button', n_clicks=0),
+                    html.Button('Run', id='run_button'),
                     # dbc.Popover(
                     #     [
                     #         dbc.PopoverHeader("Note:"),
@@ -288,16 +289,20 @@ def create_RFA(server):
 
     dash_app.layout = serve_layout
 
-    @dash_app.callback(dash.dependencies.Output("hidden-div", "children"),
+    @dash_app.callback([dash.dependencies.Output("hidden-div", "children"),dash.dependencies.Output("interval-component", "disabled")],
                        [dash.dependencies.Input("interval-component", "n_intervals")])
     def update_df(n):
         global df
         df = pd.read_csv(FILE_PATH)
-        return dash.no_update
+        if(df.memory_usage(index=True).sum()<1000):
+            return [dash.no_update, False]
+        return [dash.no_update, True]
 
     @dash_app.callback(Output(component_id='feature_dropdown', component_property='options'),
                        [Input(component_id='section_dropdown', component_property='value')])
     def update_feature_dropdown(section):
+        if section == None:
+            return dash.no_update
         lst = section_info.get(section)
         return [{'label': '{}: {}'.format(i, var_info.get(i).get('Label')), 'value': i} for i in lst]
 
@@ -309,7 +314,7 @@ def create_RFA(server):
         elif task == "Classification":
             return [{'label': i, 'value': i} for i in CLASSIFICATION_LIST]
         else:
-            return []
+            return dash.no_update
 
     @dash_app.callback(Output('slider-output-container', 'children'), [Input('num-of-factors', 'value')])
     def update_output(value):
@@ -321,8 +326,7 @@ def create_RFA(server):
 
     @dash_app.callback([Output('RFA_output', 'children'),
                         Output('reg_rec', 'data'),
-                        Output('clf_rec', 'data'),
-                        Output('popover', 'is_open'), ],
+                        Output('clf_rec', 'data')],
                        [Input('run_button', 'n_clicks')],
                        [State('state_dropdown', 'value'),
                         State('feature_dropdown', 'value'),
@@ -335,19 +339,26 @@ def create_RFA(server):
     def perform_risk_factor_analysis(n_clicks, state, label, task_type, model_type, penalty, num_of_factor, reg_data, clf_data):
         global df
         if n_clicks > 0:
+            
+            # print('Here _______________________________________')
 
             if((label == None) or (task_type == None) or (model_type == None)):
-                return [], reg_data, clf_data, True
+                # return [], reg_data, clf_data, True
+                return [dash.no_update, dash.no_update, dash.no_update]
 
-            state_df = df[df['_STATE'] == state]
+            state_df = df[df['_STATE'] == int(state)]
+            print(state_df)
             y = state_df[label]
             X = state_df.drop([label], axis=1)
             col_names = X.columns
 
             if task_type == "Regression":
+                # print("Here 2__________________________________")
                 model_res = regression_models(
                     X, y, model_type, True, alpha=penalty)
                 model = model_res[0]
+                # print('Model Done _____________________________')
+                # print(model)
                 performance_layout = html.Div(
                     html.Div(
                         dash_table.DataTable(
@@ -448,13 +459,14 @@ def create_RFA(server):
 
             if task_type == "Regression":
                 return layout, reg_data + [{"Index": len(reg_data)+1, "Label": label, 'Model': model_type, 'Penalty': penalty, 'MAE': round(model_res[1], 5), 'MSE':round(model_res[2], 5),
-                                            }], clf_data, False
+                                            }], clf_data
             elif task_type == "Classification":
                 return layout, reg_data, clf_data + [{"Index": len(clf_data)+1, "Label": label, 'Model': model_type, "Penalty": penalty, "Accuracy": round(model_res[1], 5),
                                                       "Precision":round(model_res[2], 5), "Recall":round(model_res[3], 5), "F1-Score":round(model_res[4], 5)}], None
             else:
-                return [], reg_data, clf_data, False
+                return [], reg_data, clf_data
         else:
-            return [], reg_data, clf_data, False
+            # return [], reg_data, clf_data, False
+            return dash.no_update, dash.no_update, dash.no_update
 
     return dash_app.server

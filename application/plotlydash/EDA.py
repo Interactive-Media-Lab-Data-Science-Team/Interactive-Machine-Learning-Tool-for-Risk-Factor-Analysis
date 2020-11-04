@@ -148,12 +148,14 @@ def create_EDA(server):
     dash_app.layout = server_layout
 
 
-    @dash_app.callback(dash.dependencies.Output("hidden-div", "children"),
+    @dash_app.callback([dash.dependencies.Output("hidden-div", "children"),dash.dependencies.Output("interval-component", "disabled")],
               [dash.dependencies.Input("interval-component", "n_intervals")])
     def update_df(n):
         global global_df 
         global_df= pd.read_csv(FILE_PATH)
-        return dash.no_update
+        if(global_df.memory_usage(index=True).sum()<1000):
+            return [dash.no_update, False]
+        return [dash.no_update, True]
 
 
     @dash_app.callback(dash.dependencies.Output('dropdown_content', 'children'),
