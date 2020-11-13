@@ -34,6 +34,23 @@ def regression_performance(y_true, y_pred):
     return mae, mse, r2
 
 
+# def classification_performance(y_true, y_pred):
+#     """Helper function to evaluate performance of classification models
+#     Args:
+#         y_true (list): True label
+#         y_pred (list): Predicted label
+#     Returns:
+#         Accuracy, ROC_AUC score, Precision, Recall, F1-Score
+#     """
+#     #roc_auc = roc_auc_score(y_true, y_pred, multi_class='ovo')
+#     accuracy = accuracy_score(y_true, y_pred)
+#     precision = precision_score(y_true, y_pred)
+#     recall = recall_score(y_true, y_pred)
+#     f1 = f1_score(y_true, y_pred)
+
+#     # return accuracy, roc_auc, precision, recall, f1
+#     return accuracy, precision, recall, f1
+
 def classification_performance(y_true, y_pred):
     """Helper function to evaluate performance of classification models
     Args:
@@ -42,13 +59,11 @@ def classification_performance(y_true, y_pred):
     Returns:
         Accuracy, ROC_AUC score, Precision, Recall, F1-Score
     """
-    #roc_auc = roc_auc_score(y_true, y_pred, multi_class='ovo')
     accuracy = accuracy_score(y_true, y_pred)
-    precision = precision_score(y_true, y_pred)
-    recall = recall_score(y_true, y_pred)
-    f1 = f1_score(y_true, y_pred)
+    precision = precision_score(y_true, y_pred, average="micro")
+    recall = recall_score(y_true, y_pred, average="micro")
+    f1 = f1_score(y_true, y_pred, average="micro")
 
-    # return accuracy, roc_auc, precision, recall, f1
     return accuracy, precision, recall, f1
 
 
@@ -104,18 +119,19 @@ def classification_models(X, y, model_type, norm=False, C=1.0):
     else:
         return None
     y_pred = clf.predict(X_test)
-    accuracy, roc_auc, precision, recall, f1 = classification_performance(
+    accuracy, precision, recall, f1 = classification_performance(
         y_test, y_pred)
 
     # return clf, accuracy, roc_auc, precision, recall, f1
     return clf, accuracy, precision, recall, f1
 
 
-def risk_factor_analysis(model, cols):
-    """Return Risk Factor Analysis table
+def reg_risk_factor_analysis(model, cols, nof):
+    """Return Risk Factor Analysis table for regression model
         Args:
-            model (model object): risk factor analysis model
+            model (model object): risk factor analysis  regression model
             cols (list): feature name list
+            nof (int): number of factors to be displayed
         Returns:
             list of dict: Risk Factor Analysis table
         """
@@ -125,4 +141,32 @@ def risk_factor_analysis(model, cols):
     sort_index = sorted(
         range(len(coef)), key=lambda k: np.abs(coef)[k], reverse=True)
     return [{"Rank": i+1, "Factor": "{}:{}".format(cols[sort_index[i]], var_info.get(cols[sort_index[i]]).get('Label')),
-             "Absolute Weight": round(sort_coef[i], 5), "Sign": sign[sort_index[i]]} for i in range(len(coef))]
+             "Absolute Weight": round(sort_coef[i], 5), "Sign": sign[sort_index[i]]} for i in range(nof)]
+
+
+def clf_risk_factor_analysis(model, cols, nof):
+    """Return Risk Factor Analysis table for classification model 
+        Args:
+            model (model object): risk factor analysis classification model
+            cols (list): feature name list
+            nof (int): number of factors to be displayed
+        Returns:
+            list of dict: Risk Factor Analysis table
+        """
+    classes = model.classes_
+    rfa_tab = []
+    class_idx = 0
+    for lst in model.coef_:
+        sign = np.where(np.array(lst) > 0, '+', '-').tolist()
+        sort_coef = sorted(np.abs(lst), reverse=True)
+        sort_index = sorted(
+            range(len(lst)), key=lambda k: np.abs(lst)[k], reverse=True)
+        rfa_tab += [{"Rank": classes[class_idx],
+                     "Factor": "", "Absolute Weight": "", "Sign": ""}]
+        try:
+            rfa_tab += [{"Rank": i+1, "Factor": "{}:{}".format(cols[sort_index[i]], var_info.get(cols[sort_index[i]]).get(
+                'Label')), "Absolute Weight": round(sort_coef[i], 5), "Sign": sign[sort_index[i]]} for i in range(nof)]
+        except AttributeError:
+            print("Variable info error")
+        class_idx += 1
+    return rfa_tab

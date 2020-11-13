@@ -9,7 +9,7 @@ import dash_core_components as dcc
 from dash.dependencies import Input, Output, State
 import plotly.graph_objects as go
 from .layouts.layout import html_layout
-from .modelHelperFunctions import regression_models, classification_models, risk_factor_analysis
+from .modelHelperFunctions import regression_models, classification_models, reg_risk_factor_analysis, clf_risk_factor_analysis
 import dash_bootstrap_components as dbc
 
 
@@ -26,9 +26,8 @@ CLASSIFICATION_LIST = ["Logistic", "LDA"]
 CLF_CRITERION = ["Index", "Label", "Model", "Penalty",
                  "Accuracy", "Precision", "Recall", "F1-Score"]
 
-
-# df = pd.read_csv(FILE_PATH)[:5000]
-df = pd.read_csv(FILE_PATH)
+#df = pd.read_csv(FILE_PATH, index_col=0)[:5000]
+df = pd.read_csv(FILE_PATH, index_col=0)
 
 
 def load_info_dict(file):
@@ -195,7 +194,7 @@ def serve_layout():
                     html.Label(
                         "Proceed risk factor analysis and see the results"),
                     html.Hr(),
-                    html.Button('Run', id='run_button'),
+                    html.Button('Run', id='run_button', n_clicks=0),
                     # dbc.Popover(
                     #     [
                     #         dbc.PopoverHeader("Note:"),
@@ -289,12 +288,12 @@ def create_RFA(server):
 
     dash_app.layout = serve_layout
 
-    @dash_app.callback([dash.dependencies.Output("hidden-div", "children"),dash.dependencies.Output("interval-component", "disabled")],
+    @dash_app.callback([dash.dependencies.Output("hidden-div", "children"), dash.dependencies.Output("interval-component", "disabled")],
                        [dash.dependencies.Input("interval-component", "n_intervals")])
     def update_df(n):
         global df
         df = pd.read_csv(FILE_PATH)
-        if(df.memory_usage(index=True).sum()<1000):
+        if(df.memory_usage(index=True).sum() < 1000):
             return [dash.no_update, False]
         return [dash.no_update, True]
 
@@ -338,26 +337,24 @@ def create_RFA(server):
                         State('clf_rec', 'data')])
     def perform_risk_factor_analysis(n_clicks, state, label, task_type, model_type, penalty, num_of_factor, reg_data, clf_data):
         global df
+
+        # print(df.columns)
         if n_clicks > 0:
-            
-            # print('Here _______________________________________')
 
             if((label == None) or (task_type == None) or (model_type == None)):
                 # return [], reg_data, clf_data, True
-                return [dash.no_update, dash.no_update, dash.no_update]
+                return dash.no_update, dash.no_update, dash.no_update
 
             state_df = df[df['_STATE'] == int(state)]
-            print(state_df)
             y = state_df[label]
             X = state_df.drop([label], axis=1)
             col_names = X.columns
 
             if task_type == "Regression":
-                # print("Here 2__________________________________")
                 model_res = regression_models(
                     X, y, model_type, True, alpha=penalty)
                 model = model_res[0]
-                # print('Model Done _____________________________')
+                res = reg_risk_factor_analysis(model, col_names, num_of_factor)
                 # print(model)
                 performance_layout = html.Div(
                     html.Div(
@@ -381,8 +378,9 @@ def create_RFA(server):
                     model_type)
             elif task_type == "Classification":
                 model_res = classification_models(
-                    X, y, "Logistic", True, C=penalty)
+                    X, y, model_type, True, C=penalty)
                 model = model_res[0]
+                res = clf_risk_factor_analysis(model, col_names, num_of_factor)
                 performance_layout = html.Div(
                     html.Div(
                         dash_table.DataTable(
@@ -404,10 +402,10 @@ def create_RFA(server):
                 info = "Perform Risk Factor Analysis with normalized data based on {} model".format(
                     model_type)
             else:
-                return [], reg_data, clf_data, False
+                return [], reg_data, clf_data
 
             res_tab_col = ["Rank", "Factor", "Absolute Weight", "Sign"]
-            res = risk_factor_analysis(model, col_names)
+            #res = reg_risk_factor_analysis(model, col_names, num_of_factor)
 
             layout = html.Div(children=[
                 html.P(
@@ -419,7 +417,7 @@ def create_RFA(server):
                         columns=[
                             {'name': i, 'id': i} for i in res_tab_col
                         ],
-                        data=res[: num_of_factor],
+                        data=res,
                         style_cell={
                             'height': 'auto',
                             'minWidth': '180px', 'width': '180px', 'maxWidth': '180px',
@@ -462,7 +460,7 @@ def create_RFA(server):
                                             }], clf_data
             elif task_type == "Classification":
                 return layout, reg_data, clf_data + [{"Index": len(clf_data)+1, "Label": label, 'Model': model_type, "Penalty": penalty, "Accuracy": round(model_res[1], 5),
-                                                      "Precision":round(model_res[2], 5), "Recall":round(model_res[3], 5), "F1-Score":round(model_res[4], 5)}], None
+                                                      "Precision":round(model_res[2], 5), "Recall":round(model_res[3], 5), "F1-Score":round(model_res[4], 5)}]
             else:
                 return [], reg_data, clf_data
         else:
