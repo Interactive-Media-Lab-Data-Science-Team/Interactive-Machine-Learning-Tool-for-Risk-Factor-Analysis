@@ -276,11 +276,11 @@ def serve_layout():
 def create_RFA(server):
     global df
     dash_app = dash.Dash(name='RFA', server=server, url_base_pathname='/RFA/', external_stylesheets=[
-        dbc.themes.BOOTSTRAP,
-        '/static/dist/css/styles.css',
+        # dbc.themes.BOOTSTRAP,
+        'https://codepen.io/dapraxis/pen/OJXNeMP.css',
+        '/static/dist/css/styles.css'
         # 'https://fonts.googleapis.com/css?family=Lato',
         # 'https://codepen.io/chriddyp/pen/bWLwgP.css',
-        'https://codepen.io/dapraxis/pen/OJXNeMP.css'
     ]
     )
 
