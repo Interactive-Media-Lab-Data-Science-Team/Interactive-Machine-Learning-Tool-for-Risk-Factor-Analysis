@@ -151,7 +151,7 @@ def serve_layout():
                 html.Div([
                     html.P(
                         html.Label(
-                            "Please select the penalty multiplier: ")
+                            "Please select the tuning parameter value of the penalty multiplier (the precision is 0.1): ")
                     ),
 
                     dcc.Slider(
