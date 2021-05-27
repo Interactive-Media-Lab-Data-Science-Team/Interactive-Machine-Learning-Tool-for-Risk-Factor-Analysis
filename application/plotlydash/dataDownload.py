@@ -158,6 +158,7 @@ def dataDownload(server):
 
         return html.Div([
             # html.H5("Upload File: {}".format(filename)),
+            html.A(html.Button('Next', id='btn'), href = '/EDA/'),              #added line
             html.H5("File size: {:.3f}MB".format(size)),
             dcc.Loading(children=[
                 dash_table.DataTable(
@@ -179,7 +180,7 @@ def dataDownload(server):
             ),
 
             html.Hr(),  # horizontal line
-            html.A(html.Button('Next', id='btn'), href='/EDA/')
+            #html.A(html.Button('Next', id='btn'), href='/EDA/')   #removed line
             ], type='cube')
         ])
 
