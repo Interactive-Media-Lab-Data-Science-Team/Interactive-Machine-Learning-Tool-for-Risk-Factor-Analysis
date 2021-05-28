@@ -112,7 +112,7 @@ def serve_layout():
 
                 html.Div(
                     html.P(html.Label(
-                        "Please verify the type of selected feature: ")),
+                        "Please verify the type of selected feature based on the variable meaning you selected in the last step (e.g., diagnostic related variables such as ever told / diagnosed wtih a specefic disease are categorical variables, while number of days and real values of lab tests are continuous variables): ")),
                 ),
                 html.Div([
                     dcc.Dropdown(
