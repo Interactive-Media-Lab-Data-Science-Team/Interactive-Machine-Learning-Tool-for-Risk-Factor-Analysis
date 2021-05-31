@@ -155,7 +155,7 @@ def dataDownload(server):
             ])
         
         size = convert_unit(os.stat(str(os.getcwd())+'/'+str(filename)).st_size, SIZE_UNIT.MB)
-
+        new_df = df.iloc[:5, :5]
         return html.Div([
             # html.H5("Upload File: {}".format(filename)),
             html.A(html.Button('Next', id='btn'), href = '/EDA/'),       
@@ -163,8 +163,8 @@ def dataDownload(server):
             dcc.Loading(children=[
                 dash_table.DataTable(
                 id='database-table',
-                columns=[{'name': i, 'id': i} for i in df.columns],
-                data=df[:1000].to_dict('records'),
+                columns=[{'name': i, 'id': i} for i in new_df.columns],
+                data=new_df[:1000].to_dict('records'),
                 sort_action="native",
                 sort_mode='native',
                 page_size=300,
