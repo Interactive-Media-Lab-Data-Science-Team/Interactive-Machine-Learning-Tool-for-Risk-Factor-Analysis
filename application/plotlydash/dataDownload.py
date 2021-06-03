@@ -158,7 +158,9 @@ def dataDownload(server):
         new_df = df.iloc[:5, :5]
         return html.Div([
             # html.H5("Upload File: {}".format(filename)),
+            html.Hr(),
             html.A(html.Button('Next', id='btn'), href = '/EDA/'),       
+            html.Hr(),
             html.H5("File size: {:.3f}MB".format(size)),
             dcc.Loading(children=[
                 dash_table.DataTable(
